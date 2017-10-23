@@ -65,7 +65,9 @@ class MCL:
         self.M = resample_size;
         self.positions = self.positions[resample] + (np.random.rand(self.M, self.d) * 2 - 1) * self.dims * resample_position_variation;
         #self.orientation_offsets = (np.random.rand(self.M, self.sigma) * 2 - 1) * 180;
-        self.orientation_offsets = self.orientation_offsets[resample] + (np.random.rand(self.M, self.sigma) * 2 - 1) * 180 * resample_rotation_variation;
+        self.orientation_offsets = (self.orientation_offsets[resample]
+                                    + (np.random.rand(self.M, self.sigma) * 2 - 1)
+                                    * 180 * resample_rotation_variation);
         self.weights = self.weights[resample];
         self.particles = [Particle(i, self) for i in range(self.M)];
 
@@ -78,7 +80,8 @@ class MCL:
             redistribution_size = int(self.redistribution_rate * self.M);
             redistributed = np.random.choice(self.M, redistribution_size);
             self.positions[redistributed] = np.random.rand(redistribution_size, self.d) * self.dims;
-            self.orientation_offsets[redistributed] = (np.random.rand(redistribution_size, self.sigma) * 2 - 1) * 180;
+            self.orientation_offsets[redistributed] = ((np.random.rand(redistribution_size, self.sigma) * 2 - 1)
+                                                       * 180);
         
         self.normalize_weights();
     
@@ -108,7 +111,8 @@ class MCL:
             if self.action_count % self.random_walk_interval == 0:
                 return self.randomize_translation_errors();
         for i in range(self.d):
-            if self.randomized_translation_vector[i] != 0 and self.randomized_translation_vector[i] == -np.sign(translation[i]):
+            if self.randomized_translation_vector[i] != 0 and \
+                self.randomized_translation_vector[i] == -np.sign(translation[i]):
                 return self.randomize_translation_errors();
             if self.randomized_translation_vector[i] == 0:
                 self.randomized_translation_vector[i] = np.sign(translation[i]);
@@ -118,7 +122,8 @@ class MCL:
             if self.action_count % self.random_walk_interval == 0:
                 return self.randomize_rotation_errors();
         for i in range(self.sigma):
-            if self.randomized_rotation_vector[i] != 0 and self.randomized_rotation_vector[i] == -np.sign(rotation[i]):
+            if self.randomized_rotation_vector[i] != 0 and \
+                self.randomized_rotation_vector[i] == -np.sign(rotation[i]):
                 return self.randomize_rotation_errors();
             if self.randomized_rotation_vector[i] == 0:
                 self.randomized_rotation_vector[i] = np.sign(rotation[i]);
@@ -135,11 +140,15 @@ class MCL:
         
     def get_random_translation_errors(self):
         if self.use_normal_distribution:
-            translation_magnitude_errors = np.random.normal(scale=self.translation_magnitude_error / 3, size=(self.M, self.d));
-            translation_direction_errors = np.random.normal(scale=self.translation_direction_error / 3, size=(self.M, self.sigma)) * 180;
+            translation_magnitude_errors = np.random.normal(scale=self.translation_magnitude_error / 3,
+                                                            size=(self.M, self.d));
+            translation_direction_errors = np.random.normal(scale=self.translation_direction_error / 3,
+                                                            size=(self.M, self.sigma)) * 180;
         else:
-            translation_magnitude_errors = (np.random.rand(self.M, self.d) * 2 - 1) * self.translation_magnitude_error;
-            translation_direction_errors = (np.random.rand(self.M, self.sigma) * 2 - 1) * self.translation_direction_error * 180;
+            translation_magnitude_errors = ((np.random.rand(self.M, self.d) * 2 - 1)
+                                            * self.translation_magnitude_error);
+            translation_direction_errors = ((np.random.rand(self.M, self.sigma) * 2 - 1)
+                                            * self.translation_direction_error * 180);
             
         return translation_magnitude_errors, translation_direction_errors;
         
@@ -158,7 +167,8 @@ class MCL:
             transformed_translation = _rotate_transform(
                 *transformed_translation, rotation=self.translation_direction_errors[particle.id]);
             
-            self.positions[particle.id] += transformed_translation * (self.translation_magnitude_errors[particle.id] + 1);
+            self.positions[particle.id] += (transformed_translation
+                                            * (self.translation_magnitude_errors[particle.id] + 1));
         self.action_count += 1;
             
     def rotate(self, *rotation):
@@ -210,7 +220,8 @@ class Particle:
         self.mcl.weights[self.id] = weight;
         
     def __repr__(self):
-        return 'Particle(id=' + str(self.id) + ', position='+str(self.get_position())+', orientation_offset='+str(self.get_orientation_offset())+', weight='+str(self.get_weight())+')';
+        return 'Particle(id=' + str(self.id) + ', position='+str(self.get_position())+ \
+        ', orientation_offset='+str(self.get_orientation_offset())+', weight='+str(self.get_weight())+')';
 
     
 def _2_dimensional_rotation_transformation(r):
@@ -234,7 +245,8 @@ def _rotate_transform(*vector, **kwargs):
     if rotation is None or d == 1:
         return vector;
     if len(rotation) != sigma:
-        raise Exception(str(sigma) + ' parameters are required to represent orientation in ' + str(d) + ' dimensions');
+        raise Exception(str(sigma) + ' parameters are required to represent orientation in ' + \
+                        str(d) + ' dimensions');
 
     rads = map(lambda x: math.radians(x), rotation);
     transformation = None;
